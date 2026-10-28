@@ -425,6 +425,21 @@ app.get('/api/conversations/:sessionId', async (req, res) => {
   }
 });
 
+// Get all conversations (for dashboard)
+app.get('/api/conversations/all', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('conversations')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(100);
+    if (error) throw error;
+    res.json({ success: true, conversations: data });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // ==================== DOCUMENTS API ====================
 
 app.get('/api/documents', async (req, res) => {
