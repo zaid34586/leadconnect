@@ -598,6 +598,13 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'LeadConnect AI System', ai: 'active' });
 });
 
+// Serve index.html for all non-API routes (SPA support)
+app.get('*', (req, res) => {
+  if (!req.path.startsWith('/api/')) {
+    res.sendFile(path.join(__dirname, 'index.html'));
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`LeadConnect AI Server running on http://localhost:${PORT}`);
 });
