@@ -1,236 +1,362 @@
-# LeadConnect — AI B2B Lead Finder + Client Outreach System
+# LeadConnect - Production-Ready B2B Lead Generation System
 
-Ek complete AI system jo:
-1. **B2B Leads dhoondhta hai** (website par AI chat se)
-2. **Customer se baat karta hai** (AI thinking engine)
-3. **Service detail batata hai** aur requirement samajhta hai
-4. **Documents/PDF bhejta hai** customer ko (service guide, pricing, case study)
-5. **WhatsApp, Email, LinkedIn se contact karta hai** (outreach)
-6. **Interested leads ko human sales ko transfer karta hai**
+> **Fully automated B2B lead generation system** that finds real leads, engages them via AI across WhatsApp/Email/LinkedIn, qualifies them, and hands off to humans for closing.
+
+![LeadConnect Architecture](https://img.shields.io/badge/Architecture-Microservices-blue)
+![Status](https://img.shields.io/badge/Status-Production_Ready-green)
+![Docker](https://img.shields.io/badge/Docker-Ready-blue)
 
 ---
 
-## 📁 Folder Structure
+## 🎯 What It Does
+
+| Module | Capability |
+|--------|------------|
+| **🔍 Lead Sourcing** | Finds B2B decision-makers via Google, Apollo, Hunter, LinkedIn |
+| **🧠 Lead Processing** | Dedup → Validate → Enrich → Score (0-100) → Segment (hot/warm/cold) |
+| **📢 Outreach Engine** | Multi-channel sequences: Email + WhatsApp + LinkedIn |
+| **🤖 AI Conversation** | GPT-4o-mini powered chat with thinking, context, document sharing |
+| **🌐 Browser Automation** | Puppeteer-based WhatsApp Web & LinkedIn automation |
+| **📊 Dashboard** | Real-time stats, lead kanban, campaign analytics |
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        LEADCONNECT MICROSERVICES                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────┐  │
+│  │   LEAD       │    │   LEAD       │    │   OUTREACH   │    │  AI      │  │
+│  │   SOURCING   │───▶│   PROCESSING │───▶│   ENGINE     │───▶│  CHAT    │  │
+│  │   :3002      │    │   (Supabase) │    │   :3003      │    │  :3004   │  │
+│  └──────────────┘    └──────────────┘    └──────────────┘    └──────────┘  │
+│         │                                       ▲                  │       │
+│         ▼                                       │                  ▼       │
+│  ┌──────────────────────────────────────────────────────────────────────┐  │
+│  │                    BROWSER AUTOMATION :3001                          │  │
+│  │  Puppeteer Cluster │ WhatsApp Web │ LinkedIn │ Session Persistence  │  │
+│  └──────────────────────────────────────────────────────────────────────┘  │
+│                                                                             │
+│  ┌──────────────────────────────────────────────────────────────────────┐  │
+│  │                    SUPABASE (PostgreSQL + Realtime + Storage)        │  │
+│  │  leads │ conversations │ documents │ outreach_logs │ browser_sessions│  │
+│  └──────────────────────────────────────────────────────────────────────┘  │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🚀 Quick Start
+
+### Prerequisites
+- **Docker Desktop** installed and running
+- **Supabase account** (free tier works)
+- **OpenAI API key** (for AI chat)
+- **Gmail App Password** (for email outreach)
+- **API Keys** (optional but recommended): Apollo, Hunter, Google, Clearbit
+
+### 1. Clone & Configure
+```bash
+cd lead-gen-system
+cp .env.example .env
+# Edit .env with your credentials
+```
+
+### 2. Start Everything
+```bash
+# Windows
+start.bat prod
+
+# Linux/Mac
+chmod +x start.sh
+./start.sh prod
+```
+
+### 3. Access Services
+| Service | Local URL | Description |
+|---------|-----------|-------------|
+| **Main App** | http://localhost:3000 | Landing page, login, dashboard |
+| **Browser Automation** | http://localhost:3001 | WhatsApp/LinkedIn control |
+| **Lead Sourcing** | http://localhost:3002 | Lead finding APIs |
+| **Outreach Engine** | http://localhost:3003 | Campaign management |
+| **AI Engine** | http://localhost:3004 | Conversation APIs |
+
+---
+
+## 📋 Required Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `SUPABASE_URL` | ✅ | Your Supabase project URL |
+| `SUPABASE_ANON_KEY` | ✅ | Supabase anon key (publishable) |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Supabase service role key |
+| `OPENAI_API_KEY` | ✅ | OpenAI API key for AI chat |
+| `SMTP_USER` | ✅ | Gmail address for outreach |
+| `SMTP_PASS` | ✅ | Gmail 16-char App Password |
+| `APOLLO_API_KEY` | Optional | Apollo.io API key for lead sourcing |
+| `HUNTER_API_KEY` | Optional | Hunter.io API key |
+| `GOOGLE_API_KEY` | Optional | Google Custom Search API |
+| `GOOGLE_CSE_ID` | Optional | Google Custom Search Engine ID |
+| `CLEARBIT_API_KEY` | Optional | Clearbit enrichment API |
+
+---
+
+## 🗄️ Database Schema (Supabase)
+
+Run `extended_schema.sql` in Supabase SQL Editor to create all tables:
+
+```sql
+-- Core tables: leads, conversations, documents, human_transfer_queue, outreach_logs
+-- Extended: lead_sources, raw_leads, lead_enrichment, outreach_templates,
+--           outreach_sequences, outreach_campaigns, outreach_contacts,
+--           browser_sessions, ai_context, notifications
+```
+
+---
+
+## 🔧 Service APIs
+
+### Browser Automation (Port 3001)
+```bash
+# Initialize WhatsApp (QR code scan)
+POST /whatsapp/init
+
+# Send WhatsApp message
+POST /whatsapp/send { "phone": "+919876543210", "message": "Hello!" }
+
+# Initialize LinkedIn
+POST /linkedin/init
+
+# Send LinkedIn connection
+POST /linkedin/connect { "profileUrl": "https://linkedin.com/in/...", "message": "Hi..." }
+
+# Send LinkedIn message
+POST /linkedin/message { "profileUrl": "...", "message": "Hello!" }
+```
+
+### Lead Sourcing (Port 3002)
+```bash
+# Run lead sourcing
+POST /source/run { "source_id": "...", "keywords": "CEO", "locations": ["Delhi"], "titles": ["CEO", "Founder"] }
+
+# Process pending raw leads
+POST /source/process-pending
+
+# Enrich lead
+POST /enrich/:leadId
+```
+
+### Outreach Engine (Port 3003)
+```bash
+# Process outreach queue
+POST /queue/process { "batch_size": 50 }
+
+# Create campaign
+POST /campaigns { "name": "Q1 Outreach", "sequence_id": "...", "segment_filter": {...} }
+
+# Start campaign
+POST /campaigns/:id/start
+
+# Add leads to campaign
+POST /campaigns/:id/leads { "lead_ids": ["...", "..."] }
+
+# Create template
+POST /templates { "name": "Initial Email", "channel": "email", "subject": "...", "body": "..." }
+
+# Create sequence
+POST /sequences { "name": "4-Touch Email", "channel": "email", "steps": [...] }
+```
+
+### AI Engine (Port 3004)
+```bash
+# Chat with AI
+POST /chat { "message": "I need web development", "session_id": "abc123", "lead_id": "optional" }
+
+# Get document
+GET /documents/:category  # service_guide, pricing, case_study
+```
+
+---
+
+## 🤖 AI Conversation Flow
+
+```
+User visits landing page
+        │
+        ▼
+AI Chat opens: "Namaste! Main LeadConnect AI hoon..."
+        │
+        ▼
+AI asks: "Aap kaunsa service business chalate hain?"
+        │
+        ▼
+User: "Web development for restaurants"
+        │
+        ▼
+AI thinks → detects service_interest → sends Service Guide PDF
+        │
+        ▼
+AI asks: "Kaunsa region target hai?"
+        │
+        ▼
+User: "Delhi NCR"
+        │
+        ▼
+AI asks: "Target audience kaun hai?"
+        │
+        ▼
+User: "Restaurant owners"
+        │
+        ▼
+AI detects interest → offers human handoff
+        │
+        ▼
+Lead → Human Transfer Queue → Sales team calls → Deal closed
+```
+
+---
+
+## 📊 Lead Scoring & Segmentation
+
+| Factor | Points |
+|--------|--------|
+| Verified email | +20 |
+| Verified phone | +15 |
+| Decision-maker title (CEO, CTO, Founder, Director, VP) | +20 |
+| Target company size (11-1000 employees) | +15 |
+| Target industry match | +10 |
+| LinkedIn profile available | +10 |
+| Company info available | +10 |
+
+| Segment | Score Range | Action |
+|---------|-------------|--------|
+| **Hot** | 80-100 | Immediate outreach, high priority |
+| **Warm** | 50-79 | Standard outreach sequence |
+| **Cold** | 20-49 | Nurture sequence, lower frequency |
+| **Nurture** | 0-19 | Long-term nurture, content only |
+
+---
+
+## 📈 Pipeline Stages
+
+```
+NEW → CONTACTED → ENGAGED → QUALIFIED → PROPOSAL → NEGOTIATION → CLOSED_WON
+  │         │          │          │           │           │           │
+  ▼         ▼          ▼          ▼           ▼           ▼           ▼
+Import   1st touch   Replied    BANT       Sent       Discount    Contract
+Lead     sent        + interest complete   proposal   talks       signed
+                                                   
+         │          │          │           │           │
+         ▼          ▼          ▼           ▼           ▼
+     NO_REPLY  NOT_INTERESTED UNQUALIFIED  STALLED   CLOSED_LOST
+    (3 tries)  (explicit)   (no budget)  (30 days) (lost deal)
+```
+
+**Auto-transitions** happen via cron jobs.
+
+---
+
+## 🛡️ Security & Compliance
+
+- **Rate Limits**: Email 10/day, WhatsApp 3/day, LinkedIn 5/day per lead
+- **Opt-out**: Instant unsubscribe across all channels
+- **Data Retention**: 90 days conversations, 1 year leads
+- **GDPR/PDPB**: Right to deletion, data export endpoints
+- **Anti-spam**: Domain warm-up, reputation monitoring
+- **Browser Sessions**: Encrypted storage, auto-rotation
+
+---
+
+## 🚀 Deployment to Production
+
+### Vercel (Frontend)
+```bash
+vercel --prod
+# Add environment variables in Vercel dashboard
+```
+
+### Docker (Backend Services)
+```bash
+# Build and push
+docker-compose build
+docker-compose push
+
+# Deploy to cloud (AWS ECS, Google Cloud Run, Azure Container Apps)
+# Use docker-compose.yml as base
+```
+
+### Supabase
+- Enable **pg_cron** for scheduled jobs
+- Set up **Realtime** for dashboard updates
+- Configure **Storage** for documents
+- Enable **Auth** with email providers
+
+---
+
+## 📁 Project Structure
 
 ```
 lead-gen-system/
-├── index.html            # Landing page (14 sections + AI chat widget)
-├── style.css             # Custom styles
-├── script.js             # Frontend logic + AI chat integration
-├── server.js             # Express backend (AI chat, leads, outreach, documents)
-├── supabase-client.js    # Supabase client config
-├── schema.sql            # Supabase database schema
-├── package.json          # Node.js dependencies
-├── .env.example          # Environment variables template
-├── .gitignore            # Git ignore
-├── vercel.json           # Vercel deployment config
-└── README.md             # Setup instructions
+├── public/                 # Frontend (served by main app)
+│   ├── index.html          # Landing page (14 sections)
+│   ├── login.html          # Login page
+│   ├── signup.html         # Signup page
+│   ├── dashboard.html      # Dashboard with tabs
+│   ├── style.css           # 800+ lines polished CSS
+│   └── script.js           # Modular JS (Toast, Loading, Validation, Modal, API, AIChat, Dashboard, Landing, Auth)
+├── services/
+│   ├── browser-automation/ # Puppeteer WhatsApp/LinkedIn
+│   ├── lead-sourcing/      # Google/Apollo/Hunter sourcing
+│   ├── outreach-engine/    # Email/WhatsApp/LinkedIn sequences
+│   └── ai-engine/          # GPT-4o-mini chat engine
+├── src/cron.js             # Cron scheduler
+├── server.js               # Main Express server
+├── docker-compose.yml      # Full stack orchestration
+├── extended_schema.sql     # Complete DB schema
+├── PRODUCTION_PLAN.md      # Detailed implementation plan
+└── .env.example            # All environment variables
 ```
 
 ---
 
-## 🗄️ Step 1: Supabase Setup (Database + Storage)
-
-1. [supabase.com](https://supabase.com) par jayein aur account banayein.
-2. **New Project** banayein (project name: leadconnect).
-3. **SQL Editor** mein jayein aur `schema.sql` ka poora content copy-paste karke **Run** karein.
-4. **Storage** section mein jayein aur ek bucket banayein: `documents` (public).
-5. Apne PDF documents upload karein:
-   - `service-guide.pdf` — service detail
-   - `pricing.pdf` — pricing sheet
-   - `case-study.pdf` — success story
-6. **Settings → API** se ye copy karein:
-   - Project URL → `SUPABASE_URL`
-   - `anon public` key → `SUPABASE_ANON_KEY`
-   - `service_role` key → `SUPABASE_SERVICE_ROLE_KEY`
-
-7. Supabase mein documents table mein entries daalein (ya SQL editor mein):
-
-```sql
-insert into documents (title, description, file_url, file_type, category) values
-  ('Service Guide', 'Complete guide to our B2B services', 'https://your-project.supabase.co/storage/v1/object/public/documents/service-guide.pdf', 'pdf', 'service_guide'),
-  ('Pricing Sheet', 'Pricing plans and packages', 'https://your-project.supabase.co/storage/v1/object/public/documents/pricing.pdf', 'pdf', 'pricing'),
-  ('Case Study', 'Client success story', 'https://your-project.supabase.co/storage/v1/object/public/documents/case-study.pdf', 'pdf', 'case_study');
-```
-
----
-
-## ⚙️ Step 2: Local Setup
+## 🧪 Testing
 
 ```bash
-# Folder mein jayein
-cd C:\Users\mz712\lead-gen-system
+# Run all services locally
+./start.sh dev
 
-# Dependencies install karein
-npm install
+# Test APIs
+curl http://localhost:3001/health
+curl http://localhost:3002/health
+curl http://localhost:3003/health
+curl http://localhost:3004/health
 
-# .env file banayein
-copy .env.example .env
+# Test AI chat
+curl -X POST http://localhost:3004/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "I need web development", "session_id": "test123"}'
 ```
-
-`.env` file mein apni credentials daalein:
-
-```env
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-EMAIL_USER=your_email@gmail.com
-EMAIL_PASS=your_app_password
-OPENAI_API_KEY=your_openai_api_key  # Optional — for real AI
-PORT=3000
-```
-
-Local server chalaayein:
-
-```bash
-npm start
-```
-
-Browser mein kholein: `http://localhost:3000`
-
----
-
-## 🐙 Step 3: GitHub Push
-
-```bash
-git init
-git remote add origin https://github.com/apni-username/leadconnect.git
-git add .
-git commit -m "Initial commit - LeadConnect AI MVP"
-git branch -M main
-git push -u origin main
-```
-
----
-
-## 🚀 Step 4: Vercel Deployment
-
-1. [vercel.com](https://vercel.com) par jayein aur GitHub se connect karein.
-2. `leadconnect` repo import karein.
-3. **Environment Variables** add karein (`.env` se):
-   - `SUPABASE_URL`
-   - `SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-   - `EMAIL_USER`
-   - `EMAIL_PASS`
-   - `OPENAI_API_KEY` (optional)
-4. **Deploy** click karein.
-
-Live site: `https://leadconnect.vercel.app`
-
----
-
-## 🤖 AI Chat Flow (Customer Journey)
-
-```
-Visitor opens AI chat
-    ↓
-AI: "Namaste! Main LeadConnect AI hoon. Aap kaunsa service business chalate hain?"
-    ↓
-User: "Web development for restaurants"
-    ↓
-AI [Thinking]: Service matched = Web Development, Industry = Restaurants
-    ↓
-AI: "Great! Web development for restaurants. Main aapko service guide PDF bhej raha hoon. Kaunsa region target hai?"
-    ↓
-[AI sends Service Guide PDF document]
-    ↓
-User: "Delhi NCR"
-    ↓
-AI: "Perfect! Aapka target audience kaun hai?"
-    ↓
-User: "Restaurant owners"
-    ↓
-AI: "Dhanyavad! Main aapki details save kar raha hoon. Kya aap human sales agent se baat karna chahenge?"
-    ↓
-[User clicks Yes → Human Transfer Queue → Sales team calls]
-```
-
----
-
-## 🧠 AI Thinking Engine
-
-Backend (`server.js`) mein `aiThink()` function hota hai jo:
-- User ke message ka **intent** detect karta hai (service, pricing, document, human transfer)
-- Service match karta hai (Web Development, Digital Marketing, App Development, SEO)
-- **Missing info** identify karta hai (service, audience, region)
-- **Document suggest** karta hai (service guide ya pricing PDF)
-- **Human transfer** suggest karta hai agar user interested ho
-
----
-
-## 📄 Document Sharing
-
-AI chat conversation ke dauran customer ko ye bhej sakta hai:
-- **Service Guide PDF** — saari services ki detail
-- **Pricing Sheet** — sab plans ke rates
-- **Case Study** — purane clients ki success story
-
-Document modal mein open hota hai aur download kar sakte hain.
-
----
-
-## 📞 Outreach Channels
-
-| Channel | Kaise kaam karta hai |
-|---------|---------------------|
-| **WhatsApp** | WhatsApp Web link generate (wa.me) ya Business API |
-| **Email** | SMTP se personalized email (Nodemailer) |
-| **LinkedIn** | Message template generate, manual connect |
-
-Dashboard se lead ko select karke kisi bhi channel se contact kiya ja sakta hai.
-
----
-
-## 👥 Human Transfer
-
-Jab AI customer ko interested paata hai:
-1. Lead ko `human_transfer_queue` mein add karta hai
-2. Lead status `human_transfer` ho jata hai
-3. Sales team `/api/human-transfer` endpoint se queue dekh sakti hai
-4. Sales agent lead ko call/chat karke deal close karta hai
-
----
-
-## 📊 API Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/leads` | GET | Sab leads dekhna |
-| `/api/leads` | POST | Naya lead create karna |
-| `/api/leads/:id` | PATCH | Lead update karna |
-| `/api/chat` | POST | AI chat message send karna |
-| `/api/conversations/:sessionId` | GET | Chat history dekhna |
-| `/api/documents` | GET | Sab documents dekhna |
-| `/api/documents` | POST | Naya document add karna |
-| `/api/send-email` | POST | Email bhejna |
-| `/api/whatsapp-link` | POST | WhatsApp link generate |
-| `/api/linkedin-template` | POST | LinkedIn message template |
-| `/api/human-transfer` | POST/GET | Human transfer queue |
-
----
-
-## 🛠️ Tech Stack
-
-| Part | Tech |
-|------|------|
-| Frontend | HTML + Tailwind CSS + Vanilla JS |
-| Backend | Node.js + Express |
-| Database | Supabase (PostgreSQL) |
-| File Storage | Supabase Storage |
-| Email | Nodemailer (SMTP) |
-| AI Chat | Rule-based thinking engine (OpenAI ready) |
-| Hosting | Vercel |
-| Code | GitHub |
 
 ---
 
 ## 📝 License
 
-MIT
+MIT License - Feel free to use for your business!
 
 ---
 
-**Banane wala:** LeadConnect Team  
-**Shuru:** Kal se  
-**Status:** MVP Ready 🚀
+## 🤝 Support
+
+- **Issues**: GitHub Issues
+- **Docs**: `PRODUCTION_PLAN.md` for detailed implementation
+- **Architecture**: See `PRODUCTION_PLAN.md` for full technical details
+
+---
+
+**Built with ❤️ for B2B sales teams who want to automate lead generation and focus on closing deals.**
+
+🚀 **Ready to deploy? Run `./start.sh prod` and watch the magic happen!**

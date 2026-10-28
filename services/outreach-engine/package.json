@@ -1,0 +1,20 @@
+{
+  "name": "leadconnect-outreach-engine",
+  "version": "1.0.0",
+  "description": "Multi-channel outreach engine - Email, WhatsApp, LinkedIn sequences",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "nodemailer": "^6.9.7",
+    "uuid": "^9.0.0",
+    "handlebars": "^4.7.8"
+  }
+}

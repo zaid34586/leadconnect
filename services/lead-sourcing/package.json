@@ -1,0 +1,19 @@
+{
+  "name": "leadconnect-lead-sourcing",
+  "version": "1.0.0",
+  "description": "Lead sourcing service - Google, LinkedIn, Apollo, Hunter APIs",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "axios": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "uuid": "^9.0.0"
+  }
+}

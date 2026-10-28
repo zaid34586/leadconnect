@@ -1,0 +1,149 @@
+version: '3.8'
+
+services:
+  # ========================================
+  # MAIN APP (Next.js style - Vercel compatible)
+  # ========================================
+  main-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.main
+    ports:
+      - "3000:3000"
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - NODE_ENV=production
+    depends_on:
+      - browser-automation
+      - lead-sourcing
+      - outreach-engine
+      - ai-engine
+    networks:
+      - leadconnect-network
+
+  # ========================================
+  # BROWSER AUTOMATION SERVICE
+  # ========================================
+  browser-automation:
+    build:
+      context: ./services/browser-automation
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - HEADLESS=true
+      - CHROME_USER_DATA_DIR=/data/chrome
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY}
+    volumes:
+      - chrome-data:/data/chrome
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2'
+    networks:
+      - leadconnect-network
+
+  # ========================================
+  # LEAD SOURCING SERVICE
+  # ========================================
+  lead-sourcing:
+    build:
+      context: ./services/lead-sourcing
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - APOLLO_API_KEY=${APOLLO_API_KEY}
+      - HUNTER_API_KEY=${HUNTER_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - GOOGLE_CSE_ID=${GOOGLE_CSE_ID}
+      - CLEARBIT_API_KEY=${CLEARBIT_API_KEY}
+      - BROWSER_AUTOMATION_URL=http://browser-automation:3001
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY}
+    depends_on:
+      - browser-automation
+    networks:
+      - leadconnect-network
+
+  # ========================================
+  # OUTREACH ENGINE SERVICE
+  # ========================================
+  outreach-engine:
+    build:
+      context: ./services/outreach-engine
+      dockerfile: Dockerfile
+    ports:
+      - "3003:3003"
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - SENDER_NAME=${SENDER_NAME}
+      - SENDER_TITLE=${SENDER_TITLE}
+      - SENDER_EMAIL=${SMTP_USER}
+      - SENDER_PHONE=${SENDER_PHONE}
+      - SENDER_LINKEDIN=${SENDER_LINKEDIN}
+      - FRONTEND_URL=${FRONTEND_URL}
+      - BROWSER_AUTOMATION_URL=http://browser-automation:3001
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY}
+    depends_on:
+      - browser-automation
+    networks:
+      - leadconnect-network
+
+  # ========================================
+  # AI ENGINE SERVICE
+  # ========================================
+  ai-engine:
+    build:
+      context: ./services/ai-engine
+      dockerfile: Dockerfile
+    ports:
+      - "3004:3004"
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY}
+    networks:
+      - leadconnect-network
+
+  # ========================================
+  # CRON JOBS (pg_cron alternative)
+  # ========================================
+  cron-scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile.cron
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - LEAD_SOURCING_URL=http://lead-sourcing:3002
+      - OUTREACH_ENGINE_URL=http://outreach-engine:3003
+      - BROWSER_AUTOMATION_URL=http://browser-automation:3001
+      - AI_ENGINE_URL=http://ai-engine:3004
+      - INTERNAL_API_KEY=${INTERNAL_API_KEY}
+    depends_on:
+      - lead-sourcing
+      - outreach-engine
+      - browser-automation
+      - ai-engine
+    networks:
+      - leadconnect-network
+
+volumes:
+  chrome-data:
+
+networks:
+  leadconnect-network:
+    driver: bridge
