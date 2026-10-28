@@ -4,8 +4,8 @@
  */
 
 const CONFIG = {
-  SUPABASE_URL: 'your_supabase_project_url',
-  SUPABASE_ANON_KEY: 'your_supabase_anon_key',
+  SUPABASE_URL: 'https://ebswihfqmnuafvsquxym.supabase.co',
+  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVic3dpaGZxbW51YWZ2c3F1eHltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxNjY5MTcsImV4cCI6MjEwODc0MjkxN30.FOoSgSyi11CJxRiLGWEoXD0YyT7SvNEK3vkrD_1a2e0',
   API_BASE: window.location.origin
 };
 

@@ -14,7 +14,9 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
-app.use(express.static('.'));
+
+// Static files - serve from public directory for Vercel
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Supabase client
 const supabase = createClient(
@@ -32,7 +34,6 @@ const transporter = nodemailer.createTransport({
 });
 
 // ==================== AI SERVICE KNOWLEDGE BASE ====================
-// Yeh AI ke liye hai taaki wo service ke bare mein achhe se baat kar sake
 const SERVICE_KNOWLEDGE = {
   name: 'LeadConnect',
   description: 'B2B Lead Generation & Client Outreach System',
@@ -78,7 +79,6 @@ const SERVICE_KNOWLEDGE = {
 };
 
 // ==================== AI THINKING ENGINE ====================
-// AI response dene se pehle "sochta" hai - context analyze karta hai
 function aiThink(userMessage, conversationHistory, leadContext) {
   const thinking = {
     intent: '',
@@ -93,7 +93,6 @@ function aiThink(userMessage, conversationHistory, leadContext) {
 
   const lower = userMessage.toLowerCase();
 
-  // Intent detect karna
   if (lower.includes('service') || lower.includes('offer') || lower.includes('kya karte ho') || lower.includes('kya service')) {
     thinking.intent = 'service_inquiry';
     thinking.confidence += 30;
@@ -115,7 +114,6 @@ function aiThink(userMessage, conversationHistory, leadContext) {
     thinking.confidence += 30;
   }
 
-  // Service match karna
   SERVICE_KNOWLEDGE.services.forEach(svc => {
     if (lower.includes(svc.name.toLowerCase()) || lower.includes(svc.id)) {
       thinking.serviceMatched = svc;
@@ -135,12 +133,10 @@ function aiThink(userMessage, conversationHistory, leadContext) {
     });
   });
 
-  // Missing info check
   if (!leadContext.service_interest) thinking.missingInfo.push('service_interest');
   if (!leadContext.target_audience) thinking.missingInfo.push('target_audience');
   if (!leadContext.region) thinking.missingInfo.push('region');
 
-  // Document suggestion
   if (thinking.intent === 'service_inquiry' || thinking.intent === 'pricing_inquiry') {
     thinking.shouldSendDocument = true;
     thinking.documentCategory = thinking.intent === 'pricing_inquiry' ? 'pricing' : 'service_guide';
@@ -151,11 +147,10 @@ function aiThink(userMessage, conversationHistory, leadContext) {
   return thinking;
 }
 
-// Generate AI response based on thinking
 function generateAIResponse(thinking, userMessage, leadContext) {
   const { intent, serviceMatched, infoCollected, missingInfo, shouldSendDocument, documentCategory, reasoning } = thinking;
 
-  if (intent === 'greeting' || confidence < 20) {
+  if (!intent || thinking.confidence < 20) {
     return {
       text: "Namaste! Main LeadConnect AI hoon. Main aapko B2B clients dhoondhne mein madad kar sakta hoon. Aap kaunsa service business chalate hain?",
       thinking: reasoning,
@@ -212,7 +207,6 @@ function generateAIResponse(thinking, userMessage, leadContext) {
     };
   }
 
-  // Collect missing info
   if (missingInfo.includes('service_interest')) {
     return {
       text: "Aapka service interest kya hai? (Web Development, Digital Marketing, App Development, ya SEO)",
@@ -328,7 +322,6 @@ app.patch('/api/leads/:id', async (req, res) => {
 
 // ==================== AI CHAT API ====================
 
-// Send message to AI and get response
 app.post('/api/chat', async (req, res) => {
   try {
     const { message, session_id, lead_id } = req.body;
@@ -337,7 +330,6 @@ app.post('/api/chat', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Message and session_id required' });
     }
 
-    // Get lead context if exists
     let leadContext = {};
     let dbLeadId = lead_id;
 
@@ -359,7 +351,6 @@ app.post('/api/chat', async (req, res) => {
       }
     }
 
-    // Save user message
     if (supabase) {
       await supabase.from('conversations').insert([{
         lead_id: dbLeadId,
@@ -369,13 +360,9 @@ app.post('/api/chat', async (req, res) => {
       }]);
     }
 
-    // AI Thinking
     const thinking = aiThink(message, [], leadContext);
-
-    // Generate response
     const aiResponse = generateAIResponse(thinking, message, leadContext);
 
-    // Save AI response
     let aiMessageId = null;
     if (supabase) {
       const { data: conv } = await supabase.from('conversations').insert([{
@@ -388,7 +375,6 @@ app.post('/api/chat', async (req, res) => {
       aiMessageId = conv?.id;
     }
 
-    // If document should be sent, get document
     let document = null;
     if (aiResponse.sendDocument && supabase) {
       const { data: docs } = await supabase
@@ -402,14 +388,11 @@ app.post('/api/chat', async (req, res) => {
       }
     }
 
-    // If human transfer suggested, add to queue
     if (aiResponse.suggestHuman && dbLeadId) {
       await supabase.from('human_transfer_queue').insert([{
         lead_id: dbLeadId,
         reason: 'ai_qualified_interested'
       }]);
-
-      // Update lead status
       await supabase.from('leads').update({ status: 'human_transfer' }).eq('id', dbLeadId);
     }
 
@@ -472,7 +455,6 @@ app.post('/api/documents', async (req, res) => {
   }
 });
 
-// Serve uploaded documents locally (for development)
 app.get('/api/documents/download/:id', async (req, res) => {
   try {
     const { data } = await supabase.from('documents').select('*').eq('id', req.params.id).single();
@@ -485,7 +467,6 @@ app.get('/api/documents/download/:id', async (req, res) => {
 
 // ==================== OUTREACH API ====================
 
-// Send email
 app.post('/api/send-email', async (req, res) => {
   try {
     const { to, subject, text, html, lead_id } = req.body;
@@ -499,7 +480,6 @@ app.post('/api/send-email', async (req, res) => {
       html
     });
 
-    // Log outreach
     if (supabase && lead_id) {
       await supabase.from('outreach_logs').insert([{
         lead_id,
@@ -520,7 +500,6 @@ app.post('/api/send-email', async (req, res) => {
   }
 });
 
-// WhatsApp link generate
 app.post('/api/whatsapp-link', (req, res) => {
   try {
     const { phone, message, lead_id } = req.body;
@@ -549,13 +528,90 @@ app.post('/api/whatsapp-link', (req, res) => {
   }
 });
 
-// LinkedIn connect message template
 app.post('/api/linkedin-template', (req, res) => {
   try {
     const { lead_name, service_interest, region } = req.body;
     const template = `Hi ${lead_name || 'there'}, I found your profile and think we can help with ${service_interest || 'your business'} in ${region || 'your region'}. Would you be open to a brief conversation?`;
 
     res.json({ success: true, template });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ==================== SUPABASE AUTH API ====================
+
+// Sign up
+app.post('/api/auth/signup', async (req, res) => {
+  try {
+    const { email, password, name, company } = req.body;
+    
+    const { data, error } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { name, company }
+    });
+    
+    if (error) throw error;
+    
+    // Create lead profile
+    if (data.user) {
+      await supabase.from('leads').insert([{
+        id: data.user.id,
+        email,
+        name,
+        company,
+        status: 'new'
+      }]);
+    }
+    
+    res.json({ success: true, user: data.user });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Sign in
+app.post('/api/auth/signin', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+    
+    if (error) throw error;
+    
+    res.json({ success: true, session: data.session, user: data.user });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Sign out
+app.post('/api/auth/signout', async (req, res) => {
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Get current user
+app.get('/api/auth/user', async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.json({ success: true, user: null });
+    
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    
+    if (error) throw error;
+    res.json({ success: true, user });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
@@ -598,10 +654,15 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', service: 'LeadConnect AI System', ai: 'active' });
 });
 
-// Serve index.html for all non-API routes (SPA support)
+// Serve HTML pages for all non-API routes
 app.get('*', (req, res) => {
   if (!req.path.startsWith('/api/')) {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    const filePath = path.join(__dirname, 'public', req.path === '/' ? 'index.html' : req.path + '.html');
+    if (fs.existsSync(filePath)) {
+      res.sendFile(filePath);
+    } else {
+      res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    }
   }
 });
 
