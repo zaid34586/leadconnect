@@ -4,169 +4,78 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Sign Up | LeadConnect</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Inter', sans-serif; }
-    .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-  </style>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: { 50: '#f0f4ff', 100: '#e0e7ff', 500: '#6366f1', 600: '#4f46e5', 700: '#4338ca', 900: '#312e81' }
-          }
-        }
-      }
-    }
-  </script>
 </head>
 <body class="bg-gray-50 min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-  <div class="max-w-md w-full space-y-8">
-    <div class="text-center">
-      <a href="/" class="inline-flex items-center gap-2">
-        <div class="w-10 h-10 gradient-bg rounded-lg flex items-center justify-center text-white font-bold">LC</div>
+  <div class="w-full max-w-md animate-fade-in">
+    <div class="text-center mb-8">
+      <a href="/" class="inline-flex items-center gap-2 mb-6">
+        <div class="w-10 h-10 gradient-brand rounded-lg flex items-center justify-center text-white font-bold">LC</div>
         <span class="text-xl font-bold text-gray-900">LeadConnect</span>
       </a>
-      <h2 class="mt-6 text-3xl font-bold text-gray-900">Create your account</h2>
+      <h2 class="text-3xl font-bold text-gray-900">Create your account</h2>
       <p class="mt-2 text-gray-600">Start finding B2B clients with AI</p>
     </div>
     
-    <form class="mt-8 space-y-6" id="signupForm">
-      <input type="hidden" name="redirect" value="/dashboard">
-      
+    <form id="signupForm" class="card p-8 space-y-5" novalidate>
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label for="firstName" class="sr-only">First name</label>
+          <label class="form-label required" for="firstName">First name</label>
           <input id="firstName" name="firstName" type="text" autocomplete="given-name" required 
-            class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500 focus:z-10 sm:text-sm" 
-            placeholder="First name">
+            class="form-input" placeholder="John">
         </div>
         <div>
-          <label for="lastName" class="sr-only">Last name</label>
+          <label class="form-label required" for="lastName">Last name</label>
           <input id="lastName" name="lastName" type="text" autocomplete="family-name" required 
-            class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500 focus:z-10 sm:text-sm" 
-            placeholder="Last name">
+            class="form-input" placeholder="Doe">
         </div>
       </div>
 
       <div>
-        <label for="email" class="sr-only">Email address</label>
+        <label class="form-label required" for="email">Email address</label>
         <input id="email" name="email" type="email" autocomplete="email" required 
-          class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500 focus:z-10 sm:text-sm" 
-          placeholder="Email address">
+          class="form-input" placeholder="you@example.com">
       </div>
 
       <div>
-        <label for="company" class="sr-only">Company (optional)</label>
+        <label class="form-label" for="company">Company (optional)</label>
         <input id="company" name="company" type="text" autocomplete="organization" 
-          class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500 focus:z-10 sm:text-sm" 
-          placeholder="Company name">
+          class="form-input" placeholder="Company name">
       </div>
 
       <div>
-        <label for="password" class="sr-only">Password</label>
+        <label class="form-label required" for="password">Password</label>
         <input id="password" name="password" type="password" autocomplete="new-password" required 
-          class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500 focus:z-10 sm:text-sm" 
-          placeholder="Password (min 8 characters)">
+          class="form-input" placeholder="Min 8 characters">
       </div>
 
       <div>
-        <label for="confirmPassword" class="sr-only">Confirm password</label>
+        <label class="form-label required" for="confirmPassword">Confirm password</label>
         <input id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" required 
-          class="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-brand-500 focus:border-brand-500 focus:z-10 sm:text-sm" 
-          placeholder="Confirm password">
+          class="form-input" placeholder="Confirm password">
       </div>
 
-      <div class="flex items-start">
-        <input id="terms" name="terms" type="checkbox" required class="h-4 w-4 text-brand-600 focus:ring-brand-500 border-gray-300 rounded">
-        <label for="terms" class="ml-2 block text-sm text-gray-600">
-          I agree to the <a href="#" class="text-brand-600 hover:text-brand-500">Terms of Service</a> and <a href="#" class="text-brand-600 hover:text-brand-500">Privacy Policy</a>
-        </label>
+      <div class="form-checkbox">
+        <input type="checkbox" id="terms" name="terms" required class="form-checkbox-input">
+        <label for="terms">I agree to the <a href="#" class="text-brand-600 hover:text-brand-500">Terms of Service</a> and <a href="#" class="text-brand-600 hover:text-brand-500">Privacy Policy</a></label>
       </div>
 
-      <div>
-        <button type="submit" class="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-brand-600 hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-500 transition">
-          <span class="absolute left-0 inset-y-0 flex items-center pl-3">
-            <i class="fas fa-user-plus text-brand-500 group-hover:text-brand-400 transition"></i>
-          </span>
-          Create account
-        </button>
-      </div>
+      <button type="submit" class="btn btn-primary btn-lg w-full">
+        <span class="btn-text"><i class="fas fa-user-plus mr-2"></i>Create account</span>
+      </button>
     </form>
 
-    <div class="text-center text-sm text-gray-600">
+    <div class="text-center text-sm text-gray-600 mt-6">
       <p>Already have an account? <a href="/login" class="font-medium text-brand-600 hover:text-brand-500">Sign in</a></p>
     </div>
     
-    <div id="errorMessage" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm"></div>
-    <div id="successMessage" class="hidden bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm"></div>
+    <div id="errorMessage" class="toast toast-error hidden" role="alert"></div>
+    <div id="successMessage" class="toast toast-success hidden" role="alert"></div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const SUPABASE_URL = 'https://ebswihfqmnuafvsquxym.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVic3dpaGZxbW51YWZ2c3F1eHltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMxNjY5MTcsImV4cCI6MjEwODc0MjkxN30.FOoSgSyi11CJxRiLGWEoXD0YyT7SvNEK3vkrD_1a2e0';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    document.getElementById('signupForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const formData = new FormData(e.target);
-      const email = formData.get('email');
-      const password = formData.get('password');
-      const confirmPassword = formData.get('confirmPassword');
-      const firstName = formData.get('firstName');
-      const lastName = formData.get('lastName');
-      const company = formData.get('company');
-      
-      if (password !== confirmPassword) {
-        document.getElementById('errorMessage').textContent = 'Passwords do not match';
-        document.getElementById('errorMessage').classList.remove('hidden');
-        return;
-      }
-      
-      if (password.length < 8) {
-        document.getElementById('errorMessage').textContent = 'Password must be at least 8 characters';
-        document.getElementById('errorMessage').classList.remove('hidden');
-        return;
-      }
-      
-      const btn = e.target.querySelector('button[type="submit"]');
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating account...';
-      
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { name: `${firstName} ${lastName}`, company },
-          emailRedirectTo: window.location.origin + '/dashboard'
-        }
-      });
-      
-      if (error) {
-        document.getElementById('errorMessage').textContent = error.message;
-        document.getElementById('errorMessage').classList.remove('hidden');
-        btn.disabled = false;
-        btn.innerHTML = 'Create account';
-      } else {
-        document.getElementById('successMessage').textContent = 'Account created! Please check your email to confirm.';
-        document.getElementById('successMessage').classList.remove('hidden');
-        document.getElementById('errorMessage').classList.add('hidden');
-        btn.disabled = false;
-        btn.innerHTML = 'Create account';
-        
-        setTimeout(() => {
-          window.location.href = '/login';
-        }, 3000);
-      }
-    });
-
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) window.location.href = '/dashboard';
-    });
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
